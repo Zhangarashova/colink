@@ -6,6 +6,8 @@ import {
   CalendarClock,
   Target,
   User,
+  Moon,
+  Sun,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -20,7 +22,7 @@ import { Input } from "@/components/ui/input";
 import { useEffect, useState } from "react";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
-import notificationSound from "@/assets/notification.mp3";
+import { useTheme } from "@/components/theme-provider";
 
 dayjs.extend(relativeTime);
 
@@ -63,15 +65,13 @@ const mockData: Notification[] = [
 ];
 
 const TopRightNavigation = () => {
+  const { theme, setTheme } = useTheme();
   const [notifications, setNotifications] = useState<Notification[]>([]);
-  const [audio] = useState(() => new Audio(notificationSound));
   const [level, setLevel] = useState(5);
   const [xp, setXp] = useState(320); // из 500 например
 
   useEffect(() => {
     setNotifications(mockData);
-    const unread = mockData.filter((n) => !n.read);
-    if (unread.length > 0) audio.play();
   }, []);
 
   const markAsRead = (id: string) => {
@@ -103,6 +103,20 @@ const TopRightNavigation = () => {
           />
         </DialogContent>
       </Dialog>
+
+      {/* Dark Mode Toggle */}
+      <Button
+        variant="ghost"
+        size="icon"
+        onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+        className="text-muted-foreground"
+      >
+        {theme === "dark" ? (
+          <Sun className="w-4 h-4" />
+        ) : (
+          <Moon className="w-4 h-4" />
+        )}
+      </Button>
 
       {/* Notifications */}
       <Popover>
