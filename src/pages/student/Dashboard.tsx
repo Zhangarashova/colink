@@ -1,13 +1,16 @@
-import { Trophy, Target, Gamepad2, Users, ArrowRight, Star } from "lucide-react";
+import { Trophy, Target, Gamepad2, Users, ArrowRight, Star, Gift } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Link } from "react-router-dom";
+import { useState, useEffect } from "react";
 import BottomNavigation from "@/components/BottomNavigation";
 import TopRightNavigation from "@/components/TopRightNavigation";
+import DailyRewardModal from "@/components/DailyRewardModal";
 
 const StudentDashboard = () => {
-  const studentData = {
+  const [showDailyReward, setShowDailyReward] = useState(false);
+  const [studentData, setStudentData] = useState({
     name: "Alex Thompson",
     xp: 1250,
     level: 8,
@@ -15,7 +18,18 @@ const StudentDashboard = () => {
     badges: 7,
     questsCompleted: 15,
     rank: 12
-  };
+  });
+
+  // Check if user should see daily reward (simulate checking last login)
+  useEffect(() => {
+    const lastLogin = localStorage.getItem('lastLogin');
+    const today = new Date().toDateString();
+    
+    if (lastLogin !== today) {
+      setShowDailyReward(true);
+      localStorage.setItem('lastLogin', today);
+    }
+  }, []);
 
   const recentBadges = [
     { id: 1, name: "First Quest", icon: "🏆", type: "bronze" },
@@ -28,6 +42,18 @@ const StudentDashboard = () => {
     { id: 2, title: "Attend Virtual Lab Session", xp: 100, progress: 0 },
     { id: 3, title: "Participate in Group Discussion", xp: 80, progress: 50 }
   ];
+
+  const handleClaimReward = (reward: any) => {
+    // Update student data based on reward type
+    if (reward.type === 'xp') {
+      setStudentData(prev => ({
+        ...prev,
+        xp: prev.xp + reward.amount
+      }));
+    }
+    // Handle other reward types (coins, badges) here
+    console.log('Reward claimed:', reward);
+  };
 
   const xpProgress = (studentData.xp / studentData.nextLevelXP) * 100;
 
@@ -175,6 +201,13 @@ const StudentDashboard = () => {
         level={studentData.level} 
         coins={3} 
         notificationCount={5} 
+      />
+
+      {/* Daily Reward Modal */}
+      <DailyRewardModal
+        isOpen={showDailyReward}
+        onClose={() => setShowDailyReward(false)}
+        onClaimReward={handleClaimReward}
       />
     </div>
   );
