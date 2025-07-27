@@ -1,80 +1,66 @@
-import { Toaster } from "@/components/ui/toaster";
-import { Toaster as Sonner } from "@/components/ui/sonner";
-import { TooltipProvider } from "@/components/ui/tooltip";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { ThemeProvider } from "@/components/theme-provider"; 
-import TopBar from "@/components/layout/TopBar"; // ✅ top bar
-import ChatBot from "@/components/ChatBot";
+import React from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { AuthProvider, useAuth } from './contexts/AuthContext';
+import ProtectedRoute from './components/ProtectedRoute';
+import LandingPage from './pages/LandingPage';
+import LoginPage from './pages/LoginPage';
+import StudentDashboard from './pages/StudentDashboard';
+import ProfessorDashboard from './pages/ProfessorDashboard';
+import QuestPage from './pages/QuestPage';
+import './App.css';
 
-// Pages
-import Index from "./pages/Index";
-import StudentDashboard from "./pages/student/Dashboard";
-import ProfessorDashboard from "./pages/professor/Dashboard";
-import Quests from "./pages/student/Quests";
-import BusinessQuizPage from "./pages/student/BusinessQuizPage";
-import Badges from "./pages/student/Badges";
-import Leaderboard from "./pages/student/Leaderboard";
-import Profile from "./pages/shared/Profile";
-import Messaging from "./pages/shared/Messaging";
-import QuestBuilder from "./pages/professor/QuestBuilder";
-import Analytics from "./pages/professor/Analytics";
-import FAQ from "./pages/FAQ";
-import NotFound from "./pages/NotFound";
-import Login from "./pages/Login";
-import Signup from "./pages/Signup";
-console.log("Login component:", Login);
+const AppRoutes = () => {
+  const { user } = useAuth();
 
-const queryClient = new QueryClient();
+  return (
+    <Routes>
+      <Route path="/" element={user ? <Navigate to={user.role === 'student' ? '/student' : '/professor'} replace /> : <LandingPage />} />
+      <Route path="/login" element={!user ? <LoginPage /> : <Navigate to={user.role === 'student' ? '/student' : '/professor'} replace />} />
+      
+      <Route 
+        path="/student" 
+        element={
+          <ProtectedRoute requiredRole="student">
+            <StudentDashboard />
+          </ProtectedRoute>
+        } 
+      />
+      
+      <Route 
+        path="/professor" 
+        element={
+          <ProtectedRoute requiredRole="professor">
+            <ProfessorDashboard />
+          </ProtectedRoute>
+        } 
+      />
+      
+      <Route 
+        path="/quest/:questId" 
+        element={
+          <ProtectedRoute requiredRole="student">
+            <QuestPage />
+          </ProtectedRoute>
+        } 
+      />
 
-const App = () => (
-  <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-    <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        <Toaster />
-        <Sonner />
+      {/* Catch all route */}
+      <Route path="*" element={<Navigate to="/" replace />} />
+    </Routes>
+  );
+};
 
-        <BrowserRouter>
-          {/* 🔝 Верхний бар всегда закреплён */}
-          <TopBar />
-
-          <div className="pt-16"> {/* отступ сверху под TopBar */}
-            <Routes>
-              {/* Public */}
-              <Route path="/" element={<Index />} />
-              <Route path="/login" element={<Login />} />
-              <Route path="/signup" element={<Signup />} />
-              <Route path="/faq" element={<FAQ />} />
-
-              {/* Student */}
-              <Route path="/student/dashboard" element={<StudentDashboard />} />
-              <Route path="/student/quests" element={<Quests />} />
-              <Route path="/student/business-quiz" element={<BusinessQuizPage />} />
-              <Route path="/student/badges" element={<Badges />} />
-              <Route path="/student/leaderboard" element={<Leaderboard />} />
-
-              {/* Professor */}
-              <Route path="/professor/dashboard" element={<ProfessorDashboard />} />
-              <Route path="/professor/quest-builder" element={<QuestBuilder />} />
-              <Route path="/professor/analytics" element={<Analytics />} />
-
-              {/* Shared */}
-              <Route path="/profile" element={<Profile />} />
-              <Route path="/messaging" element={<Messaging />} />
-
-              {/* Not Found */}
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </div>
-
-          {/* 🤖 Чат-бот виден всегда */}
-          <ChatBot />
-        </BrowserRouter>
-      </TooltipProvider>
-    </QueryClientProvider>
-  </ThemeProvider>
-);
+function App() {
+  return (
+    <Router>
+      <AuthProvider>
+        <div className="App">
+          <AppRoutes />
+        </div>
+      </AuthProvider>
+    </Router>
+  );
+}
 
 export default App;
-// TODO: Add chatbot UI
 
